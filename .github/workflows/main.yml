@@ -54,7 +54,7 @@ jobs:
 
         - name: Stop the running container
           run: |
-            docker stop frontend || true
+            docker stop my-react-app_react-app_1 || true
             docker rename my-react-app_react-app_1 my-react-app_react-app_1-old || true
         - name: Delete the old image
           run: |
@@ -62,7 +62,7 @@ jobs:
         - name: Pull the latest image from ECR
           run: |
             docker pull 954109046861.dkr.ecr.ap-south-1.amazonaws.com/cicd:latest
-            docker tag 954109046861.dkr.ecr.ap-south-1.amazonaws.com/cicd:latest reactapp:latest
+            docker tag 954109046861.dkr.ecr.ap-south-1.amazonaws.com/cicd:latest my-react-app_react-app:latest
             
         - name: Run Docker Compose file
           run: |
