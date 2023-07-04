@@ -37,3 +37,46 @@ jobs:
     - name: Set Commit SHA environment variable
       id: set-commit-sha
       run: echo "COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+      
+      
+  deploy:
+      needs: build
+      runs-on: self-hosted
+
+      steps:
+
+        - name: Checkout repository
+          uses: actions/checkout@v2
+
+        - name: login to ecr
+          run: |
+           aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 954109046861.dkr.ecr.ap-south-1.amazonaws.com
+
+        - name: Stop the running container
+          run: |
+            docker stop frontend || true
+            docker rename reactapp reactapp-old || true
+        - name: Delete the old image
+          run: |
+            docker rmi -f 954109046861.dkr.ecr.ap-south-1.amazonaws.com/cicd:latest || true
+        - name: Pull the latest image from ECR
+          run: |
+            docker pull 954109046861.dkr.ecr.ap-south-1.amazonaws.com/cicd:latest
+
+        - name: Generate Deployment Report
+          run: |
+            echo "Deployment Report" > deployment_report.txt
+            echo "-----------------" >> deployment_report.txt
+            echo "Deployment Date: $(date)" >> deployment_report.txt
+            echo "Deployment Environment: dev" >> deployment_report.txt
+            echo "Deployed Image Tag: latest" >> deployment_report.txt
+            echo "Deployed Commit: ${{ github.sha }}" >> deployment_report.txt
+            echo "Deployed By: ${{ github.actor }}" >> deployment_report.txt
+
+          continue-on-error: true
+
+        - name: Upload Deployment Report
+          uses: actions/upload-artifact@v2
+          with:
+            name: deployment-report
+            path: deployment_report.txt
